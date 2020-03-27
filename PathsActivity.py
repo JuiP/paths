@@ -254,32 +254,34 @@ class PathsActivity(activity.Activity):
 
     def _shared_cb(self, activity):
         """ Either set up initial share..."""
+        sharer = True
         self.after_share_join(True)
 
     def _joined_cb(self, activity):
         """ ...or join an exisiting share. """
+        sharer = False
         self.after_share_join(False)
 
     def after_share_join(self,sharer):
         """ Joining and sharing are mostly the same... """
-        self.waiting_for_hand = not sharer
-        # Let the sharer know joiner is waiting for a hand.
-        if self.waiting_for_hand:
-           self.send_event("j", json_dump([self.nick, self.colors]))
+        self.robot_button.set_icon_name('no-robot')
+        self.robot_button.set_tooltip(_('The robot is disabled when sharing.'))
 
         if sharer:
             print('This is my activity: making a tube...')
             self._new_game_button.set_tooltip(
                 _('Start a new game once everyone has joined.'))
+        
         else:
             print('I am joining an activity: waiting for a tube...')
             self._new_game_button.set_icon_name('no-new-game')
             self._new_game_button.set_tooltip(
                 _('Only the sharer can start a new game.'))
+            self.send_event("j", json_dump([self.nick, self.colors]))
+            #Let the sharer know joiner is waiting for a hand
+            self.send_event("h", json_dump([self.nick, self.colors]))
 
-        self.robot_button.set_icon_name('no-robot')
-        self.robot_button.set_tooltip(_('The robot is disabled when sharing.'))
-
+       
         # display your XO on the toolbar
         self.player.set_from_pixbuf(self._player_pixbuf[0])
         self.toolbar.show_all()
@@ -310,7 +312,7 @@ class PathsActivity(activity.Activity):
         [nick, colors] = json_load(payload)
         self.status.set_label(nick + ' ' + _('has joined.'))
         self._append_player(nick, colors)
-        if self.initiating:
+        if sharer:
             payload = json_dump([self._game.buddies, self._player_colors])
             self.send_event("b", payload)
 
@@ -330,8 +332,11 @@ class PathsActivity(activity.Activity):
 
     def _new_game(self, payload):
         ''' Sharer can start a new game. '''
-        if not self.initiating:
+        if not sharer:
             self._game.new_game()
+            self.send_event("d", payload)
+            self.send_event("p", payload)
+            
 
     def _game_over(self, payload):
         ''' When one of the players cannot place a tile. '''
@@ -364,7 +369,7 @@ class PathsActivity(activity.Activity):
                                          grid_position, self._game.deck)
         self._game.show_connected_tiles()
 
-        if self.initiating:
+        if sharer:
             # First, remove the piece from whatever hand it was played.
             for i in range(COL):
                 if self._game.hands[self._game.whos_turn].hand[i] is not None \
@@ -379,7 +384,7 @@ class PathsActivity(activity.Activity):
             if self._game.whos_turn == len(self._game.buddies):
                 self._game.whos_turn = 0
             self.status.set_label(self.nick + ': ' + _('take a turn.'))
-            self._take_a_turn(self._game.buddies[self._game.whos_turn])
+            #self._take_a_turn(self._game.buddies[self._game.whos_turn])
             self.send_event("t", self._game.buddies[self._game.whos_turn])
 
     def _take_a_turn(self, nick):
@@ -387,6 +392,7 @@ class PathsActivity(activity.Activity):
         if nick == self.nick:
             self._game.its_my_turn()
         else:
+            self.set_player_on_toolbar(self, nick)
             self._game.its_their_turn(nick)
 
     def send_event(self, command, payload):
