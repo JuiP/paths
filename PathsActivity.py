@@ -385,7 +385,7 @@ class PathsActivity(activity.Activity):
                                          grid_position, self._game.deck)
         self._game.show_connected_tiles()
 
-        if sharer:
+        if self.initiating:
             print("inside if1 of _play_a_piece")
             # First, remove the piece from whatever hand it was played.
             for i in range(COL):
@@ -402,7 +402,7 @@ class PathsActivity(activity.Activity):
                 self._game.whos_turn = 0
             self.status.set_label(self.nick + ': ' + _('take a turn.'))
             self._take_a_turn(self._game.buddies[self._game.whos_turn])
-            #self.send_event("t", self._game.buddies[self._game.whos_turn])
+            self.send_event("t", self._game.buddies[self._game.whos_turn])
 
     def _take_a_turn(self, nick):
         ''' If it is your turn, take it, otherwise, wait. '''
