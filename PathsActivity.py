@@ -293,7 +293,7 @@ class PathsActivity(activity.Activity):
         self._processing_methods = {
             'n': [self._new_game, 'new game'],
             'j': [self._new_joiner, 'new joiner'],
-            ''''b': [self._buddy_list, 'buddy list'],'''
+            'b': [self._buddy_list, 'buddy list'],
             'd': [self._sending_deck, 'sending deck'],
             'h': [self._sending_hand, 'sending hand'],
             'p': [self._play_a_piece, 'play a piece'],
@@ -314,10 +314,10 @@ class PathsActivity(activity.Activity):
         self.status.set_label(nick + ' ' + _('has joined.'))
         self._append_player(nick, colors)
         print("inside _new_joiner")
-        #if sharer:
-            #payload = json_dump([self._game.buddies, self._player_colors])
-            #print("inside if of _new_joiner")
-            #self.send_event("b", payload)
+        if self.initiating:
+            payload = json_dump([self._game.buddies, self._player_colors])
+            print("inside if of _new_joiner")
+            self.send_event("b", payload)
 
     def _append_player(self, nick, colors):
         ''' Keep a list of players, their colors, and an XO pixbuf '''
@@ -329,13 +329,13 @@ class PathsActivity(activity.Activity):
             self._player_pixbuf.append(svg_str_to_pixbuf(
                 generate_xo(scale=0.8, colors=colors)))
 
-    #def _buddy_list(self, payload):
-        #''' Sharer sent the updated buddy list. '''
-        #[buddies, colors] = json_load(payload)
-        #print("inside _buddy_list")
-        #for i, nick in enumerate(buddies):
-            #self._append_player(nick, colors[i])
-            #print("inside for of _buddy_list")
+    def _buddy_list(self, payload):
+        ''' Sharer sent the updated buddy list. '''
+        [buddies, colors] = json_load(payload)
+        print("inside _buddy_list")
+        for i, nick in enumerate(buddies):
+            self._append_player(nick, colors[i])
+            print("inside for of _buddy_list")
 
     def _new_game(self, payload):
         ''' Sharer can start a new game. '''
@@ -359,7 +359,7 @@ class PathsActivity(activity.Activity):
         print("inside _sending_deck")
         self._game.deck.restore(payload)
         for tile in self._game.deck.tiles:
-            #print("inside for of _sending_deck")
+            print("inside for of _sending_deck")
             tile.reset()
             tile.hide()
 
