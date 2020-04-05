@@ -87,6 +87,7 @@ class PathsActivity(activity.Activity):
         self._game.buddies.append(self.nick)
         self._player_colors = [self.colors]
         self._player_pixbuf = [svg_str_to_pixbuf(generate_xo(scale=0.8, colors=self.colors))]
+        self.initiating = None #sharing (True) or joining (False)
         self.connect('shared', self._shared_cb)
         self.connect('joined', self._joined_cb)
          
@@ -266,6 +267,7 @@ class PathsActivity(activity.Activity):
         """ Joining and sharing are mostly the same... """
         self.robot_button.set_icon_name('no-robot')
         self.robot_button.set_tooltip(_('The robot is disabled when sharing.'))
+        self.initiating = sharer
 
         if sharer:
             print('This is my activity: making a tube...')
