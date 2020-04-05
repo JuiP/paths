@@ -340,7 +340,7 @@ class PathsActivity(activity.Activity):
     def _new_game(self, payload):
         ''' Sharer can start a new game. '''
         print("inside _new_game")
-        if sharer:
+        if self.initiating:
             self._game.new_game()
             print("inside if of _new_game")
             #self.send_event("d", payload)
@@ -409,7 +409,7 @@ class PathsActivity(activity.Activity):
         if nick == self.nick:
             self._game.its_my_turn()
         else:
-            self.set_player_on_toolbar(self, nick)
+            set_player_on_toolbar(self, nick)
             self._game.its_their_turn(nick)
 
     def send_event(self, command, payload):
