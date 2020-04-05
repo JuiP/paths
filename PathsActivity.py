@@ -411,7 +411,6 @@ class PathsActivity(activity.Activity):
         ''' If it is your turn, take it, otherwise, wait. '''
         if nick == self.nick:
             self._game.its_my_turn()
-            set_player_on_toolbar(self, nick)
         else:
             set_player_on_toolbar(self, nick)
             self._game.its_their_turn(nick)
