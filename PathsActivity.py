@@ -280,7 +280,6 @@ class PathsActivity(activity.Activity):
             self._new_game_button.set_icon_name('no-new-game')
             self._new_game_button.set_tooltip(
                 _('Only the sharer can start a new game.'))
-            self._new_game_button.set_sensitive(False)
             self.send_event("j", json_dump([self.nick, self.colors]))
             self._game._set_label('Wait for your turn')
             self._game._waiting_for_my_turn = True # wait till sharer starts a new game and makes the first move
