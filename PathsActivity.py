@@ -350,7 +350,7 @@ class PathsActivity(activity.Activity):
     def _game_over(self, payload):
         ''' When one of the players cannot place a tile. '''
         print("inside _game_over")
-        if not self._game.saw_game_over:
+        if self._game.saw_game_over:
             self._game.game_over()
             print("inside if of _game_over")
 
