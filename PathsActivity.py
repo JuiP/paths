@@ -279,7 +279,7 @@ class PathsActivity(activity.Activity):
                 _('Only the sharer can start a new game.'))
             self.send_event("j", json_dump([self.nick, self.colors]))
             #Let the sharer know joiner is waiting for a hand
-            self.send_event("h", json_dump([self.nick, self.colors]))
+            #self.send_event("h", json_dump([self.nick, self.colors]))
 
        
         # display your XO on the toolbar
@@ -287,10 +287,11 @@ class PathsActivity(activity.Activity):
         self.toolbar.show_all()
 
     def _setup_dispatch_table(self):
+        print("inside _setup_dispatch_table")
         self._processing_methods = {
             'n': [self._new_game, 'new game'],
             'j': [self._new_joiner, 'new joiner'],
-            'b': [self._buddy_list, 'buddy list'],
+            ''''b': [self._buddy_list, 'buddy list'],'''
             'd': [self._sending_deck, 'sending deck'],
             'h': [self._sending_hand, 'sending hand'],
             'p': [self._play_a_piece, 'play a piece'],
@@ -300,11 +301,9 @@ class PathsActivity(activity.Activity):
 
     def _message_cb(self, collab, buddy, msg):
         ''' Data from a tube has arrived. '''
-        command = msg.get("command")
-        if action is None:
-            return
-
-        payload = msg.get("payload")
+        print("inside _message_cb")
+        command = msg.get('action')
+        payload = msg.get('new_text')
         self._processing_methods[command][0](payload)
 
     def _new_joiner(self, payload):
@@ -312,54 +311,69 @@ class PathsActivity(activity.Activity):
         [nick, colors] = json_load(payload)
         self.status.set_label(nick + ' ' + _('has joined.'))
         self._append_player(nick, colors)
-        if sharer:
-            payload = json_dump([self._game.buddies, self._player_colors])
-            self.send_event("b", payload)
+        print("inside _new_joiner")
+        #if sharer:
+            #payload = json_dump([self._game.buddies, self._player_colors])
+            #print("inside if of _new_joiner")
+            #self.send_event("b", payload)
 
     def _append_player(self, nick, colors):
         ''' Keep a list of players, their colors, and an XO pixbuf '''
+        print("inside _append_player")
         if not nick in self._game.buddies:
+            print("inside if of _append_player")
             self._game.buddies.append(nick)
             self._player_colors.append(colors)
             self._player_pixbuf.append(svg_str_to_pixbuf(
                 generate_xo(scale=0.8, colors=colors)))
 
-    def _buddy_list(self, payload):
-        ''' Sharer sent the updated buddy list. '''
-        [buddies, colors] = json_load(payload)
-        for i, nick in enumerate(buddies):
-            self._append_player(nick, colors[i])
+    #def _buddy_list(self, payload):
+        #''' Sharer sent the updated buddy list. '''
+        #[buddies, colors] = json_load(payload)
+        #print("inside _buddy_list")
+        #for i, nick in enumerate(buddies):
+            #self._append_player(nick, colors[i])
+            #print("inside for of _buddy_list")
 
     def _new_game(self, payload):
         ''' Sharer can start a new game. '''
-        if not sharer:
+        print("inside _new_game")
+        if sharer:
             self._game.new_game()
-            self.send_event("d", payload)
-            self.send_event("p", payload)
+            print("inside if of _new_game")
+            #self.send_event("d", payload)
+            #self.send_event("p", payload)
             
 
     def _game_over(self, payload):
         ''' When one of the players cannot place a tile. '''
+        print("inside _game_over")
         if not self._game.saw_game_over:
             self._game.game_over()
+            print("inside if of _game_over")
 
     def _sending_deck(self, payload):
         ''' Sharer sends the deck. '''
+        print("inside _sending_deck")
         self._game.deck.restore(payload)
         for tile in self._game.deck.tiles:
+            #print("inside for of _sending_deck")
             tile.reset()
             tile.hide()
 
     def _sending_hand(self, payload):
         ''' Sharer sends a hand. '''
+        print("inside _sending_hand")
         hand = json_load(payload)
         nick = hand[0]
         if nick == self.nick:
             self._game.hands[self._game.buddies.index(nick)].restore(
                 payload, self._game.deck, buddy=True)
+            print("inside if of _sending_hand")
 
     def _play_a_piece(self, payload):
         ''' When a piece is played, everyone should move it into position. '''
+        print("inside _play_a_piece")
         tile_number, orientation, grid_position = json_load(payload)
         for i in range(ROW * COL):  # find the tile with this number
             if self._game.deck.tiles[i].number == tile_number:
@@ -370,6 +384,7 @@ class PathsActivity(activity.Activity):
         self._game.show_connected_tiles()
 
         if sharer:
+            print("inside if1 of _play_a_piece")
             # First, remove the piece from whatever hand it was played.
             for i in range(COL):
                 if self._game.hands[self._game.whos_turn].hand[i] is not None \
@@ -384,8 +399,8 @@ class PathsActivity(activity.Activity):
             if self._game.whos_turn == len(self._game.buddies):
                 self._game.whos_turn = 0
             self.status.set_label(self.nick + ': ' + _('take a turn.'))
-            #self._take_a_turn(self._game.buddies[self._game.whos_turn])
-            self.send_event("t", self._game.buddies[self._game.whos_turn])
+            self._take_a_turn(self._game.buddies[self._game.whos_turn])
+            #self.send_event("t", self._game.buddies[self._game.whos_turn])
 
     def _take_a_turn(self, nick):
         ''' If it is your turn, take it, otherwise, wait. '''
@@ -397,10 +412,10 @@ class PathsActivity(activity.Activity):
 
     def send_event(self, command, payload):
         """ Send event through the tube. """
-        if hasattr(self, 'chattube') and self.collab is not None:
+        if self.collab is not None:
             self.collab.post(dict(
-                command=command,
-                payload=payload
+                action = command,
+                new_text = payload
             ))
 
     def set_player_on_toolbar(self, nick):
